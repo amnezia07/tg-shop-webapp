@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Store</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: var(--tg-theme-bg-color, #ffffff);
+      color: var(--tg-theme-text-color, #222222);
+    }
+  </style>
+</head>
+<body class="p-4 flex flex-col min-h-screen">
+  <header class="mb-4">
+    <h1 class="text-xl font-bold">Каталог товаров</h1>
+    <p class="text-sm opacity-70">Выберите позиции и оформите заказ</p>
+  </header>
+
+  <div id="catalog" class="grid grid-cols-1 gap-3 flex-grow">
+    <!-- Карточка 1 -->
+    <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm">
+      <div>
+        <h3 class="font-semibold">VPN Доступ (1 месяц)</h3>
+        <p class="text-sm text-blue-600 font-bold">150 ⭐</p>
+      </div>
+      <button onclick="addToCart('VPN 1 мес', 150)" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm active:scale-95 transition">В корзину</button>
+    </div>
+
+    <!-- Карточка 2 -->
+    <div class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm">
+      <div>
+        <h3 class="font-semibold">Курс по автоматизации n8n</h3>
+        <p class="text-sm text-blue-600 font-bold">500 ⭐</p>
+      </div>
+      <button onclick="addToCart('Курс n8n', 500)" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm active:scale-95 transition">В корзину</button>
+    </div>
+  </div>
+
+  <div id="cart-bar" class="hidden mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">
+    Корзина: <span id="cart-count" class="font-bold">0</span> поз. на сумму <span id="cart-total" class="font-bold">0</span> ⭐
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
+
+    let cart = [];
+
+    function addToCart(title, price) {
+      cart.push({ title, price });
+      updateUI();
+    }
+
+    function updateUI() {
+      const total = cart.reduce((sum, item) => sum + item.price, 0);
+      document.getElementById('cart-bar').classList.remove('hidden');
+      document.getElementById('cart-count').innerText = cart.length;
+      document.getElementById('cart-total').innerText = total;
+
+      if (cart.length > 0) {
+        tg.MainButton.setText(`Оплатить ${total} ⭐`);
+        tg.MainButton.show();
+      } else {
+        tg.MainButton.hide();
+      }
+    }
+
+    tg.onEvent('mainButtonClicked', function() {
+      // Отправляем данные корзины обратно в бэкенд бота
+      const orderData = {
+        items: cart,
+        total: cart.reduce((sum, item) => sum + item.price, 0)
+      };
+      tg.sendData(JSON.stringify(orderData));
+      tg.close();
+    });
+  </script>
+</body>
+</html>
